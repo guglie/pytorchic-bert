@@ -22,7 +22,6 @@ class Config(NamedTuple):
     n_layers: int = 12 # Numher of Hidden Layers
     n_heads: int = 12 # Numher of Heads in Multi-Headed Attention Layers
     dim_ff: int = 768*4 # Dimension of Intermediate Layers in Positionwise Feedforward Net
-    #activ_fn: str = "gelu" # Non-linear Activation Function Type in Hidden Layers
     p_drop_hidden: float = 0.1 # Probability of Dropout of various Hidden Layers
     p_drop_attn: float = 0.1 # Probability of Dropout of Attention Layers
     max_len: int = 512 # Maximum Length for Positional Embeddings
@@ -31,11 +30,6 @@ class Config(NamedTuple):
     @classmethod
     def from_json(cls, file):
         return cls(**json.load(open(file, "r")))
-
-
-def gelu(x):
-    "Implementation of the gelu activation function by Hugging Face"
-    return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
 
 
 class LayerNorm(nn.Module):
@@ -112,13 +106,15 @@ class PositionWiseFeedForward(nn.Module):
     """ FeedForward Neural Networks for each position """
     def __init__(self, cfg):
         super().__init__()
-        self.fc1 = nn.Linear(cfg.dim, cfg.dim_ff)
-        self.fc2 = nn.Linear(cfg.dim_ff, cfg.dim)
-        #self.activ = lambda x: activ_fn(cfg.activ_fn, x)
+        self.layers = nn.Sequential(
+            nn.Linear(cfg.dim, cfg.dim_ff),
+            nn.Linear(cfg.dim_ff, cfg.dim),
+            nn.GELU()
+        )
 
     def forward(self, x):
         # (B, S, D) -> (B, S, D_ff) -> (B, S, D)
-        return self.fc2(gelu(self.fc1(x)))
+        return self.layers(x)
 
 
 class Block(nn.Module):
