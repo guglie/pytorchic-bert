@@ -169,7 +169,7 @@ class BertModel4Pretrain(nn.Module):
         self.fc = nn.Linear(cfg.dim, cfg.dim)
         self.activ1 = nn.Tanh()
         self.linear = nn.Linear(cfg.dim, cfg.dim)
-        self.activ2 = models.gelu
+        self.activ2 = nn.GELU()
         self.norm = models.LayerNorm(cfg)
         self.classifier = nn.Linear(cfg.dim, 2)
         # decoder is shared with embedding layer
